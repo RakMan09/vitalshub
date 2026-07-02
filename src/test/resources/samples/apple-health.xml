@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HealthData locale="en_US">
+  <Record type="HKQuantityTypeIdentifierBodyMass" unit="kg" startDate="2024-05-02 07:00:00 -0000" value="82.1"/>
+  <Record type="HKQuantityTypeIdentifierHeartRate" unit="count/min" startDate="2024-05-02 08:00:00 -0000" value="68"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" unit="count" startDate="2024-05-02 00:00:00 -0000" value="9120"/>
+</HealthData>

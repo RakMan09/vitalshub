@@ -5,6 +5,7 @@ import com.vitalshub.audit.AuditContextHolder;
 import com.vitalshub.fhir.store.FhirResourceStore;
 import com.vitalshub.fhir.validation.FhirValidationService;
 import com.vitalshub.fhir.validation.ValidationOutcome;
+import com.vitalshub.metrics.DataQualityMetrics;
 import com.vitalshub.normalize.TerminologyMapper;
 import com.vitalshub.normalize.TerminologyResult;
 import com.vitalshub.quarantine.QuarantineService;
@@ -30,18 +31,21 @@ public class IngestionService {
     private final FhirValidationService validationService;
     private final FhirResourceStore store;
     private final QuarantineService quarantineService;
+    private final DataQualityMetrics metrics;
 
     public IngestionService(List<SourceAdapter> adapters,
                             TerminologyMapper terminologyMapper,
                             FhirValidationService validationService,
                             FhirResourceStore store,
-                            QuarantineService quarantineService) {
+                            QuarantineService quarantineService,
+                            DataQualityMetrics metrics) {
         this.adapters = adapters.stream()
                 .collect(Collectors.toMap(SourceAdapter::sourceType, Function.identity()));
         this.terminologyMapper = terminologyMapper;
         this.validationService = validationService;
         this.store = store;
         this.quarantineService = quarantineService;
+        this.metrics = metrics;
     }
 
     public IngestionResult ingest(String sourceType, String rawContent, IngestionContext context) {
@@ -53,6 +57,7 @@ public class IngestionService {
         IngestionResult result = new IngestionResult(sourceType);
         AuditContext previous = AuditContextHolder.get();
         AuditContextHolder.set(AuditContext.of(context.actor(), "INGESTION"));
+        long start = System.nanoTime();
         try {
             List<Resource> resources = adapter.toFhir(rawContent, context);
             for (Resource resource : resources) {
@@ -71,6 +76,7 @@ public class IngestionService {
                 }
             }
         } finally {
+            metrics.record(result, System.nanoTime() - start);
             AuditContextHolder.set(previous);
         }
         return result;

@@ -1,0 +1,12 @@
+sourceSystem,sourceCode,targetSystem,targetCode,display
+https://vitalshub.example/fhir/CodeSystem/wearable,resting_heart_rate,http://loinc.org,40443-4,Heart rate --resting
+https://vitalshub.example/fhir/CodeSystem/wearable,heart_rate,http://loinc.org,8867-4,Heart rate
+https://vitalshub.example/fhir/CodeSystem/wearable,steps,http://loinc.org,41950-7,Number of steps in 24 hour Measured
+https://vitalshub.example/fhir/CodeSystem/scale,weight_kg,http://loinc.org,29463-7,Body weight
+https://vitalshub.example/fhir/CodeSystem/scale,weight_kg,http://snomed.info/sct,27113001,Body weight
+https://vitalshub.example/fhir/CodeSystem/scale,body_fat_pct,http://loinc.org,41982-0,Percentage of body fat Measured
+https://vitalshub.example/fhir/CodeSystem/scale,bmi,http://loinc.org,39156-5,Body mass index (BMI) [Ratio]
+https://vitalshub.example/fhir/CodeSystem/apple-health,HKQuantityTypeIdentifierBodyMass,http://loinc.org,29463-7,Body weight
+https://vitalshub.example/fhir/CodeSystem/apple-health,HKQuantityTypeIdentifierHeartRate,http://loinc.org,8867-4,Heart rate
+https://vitalshub.example/fhir/CodeSystem/apple-health,HKQuantityTypeIdentifierStepCount,http://loinc.org,41950-7,Number of steps in 24 hour Measured
+https://vitalshub.example/fhir/CodeSystem/hl7v2-local,GLU,http://loinc.org,2339-0,Glucose [Mass/volume] in Blood

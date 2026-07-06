@@ -61,7 +61,7 @@ public class FhirResourceStore {
             success = true;
             return resource;
         } finally {
-            audit(AuditAction.CREATE, type, id, success);
+            audit(AuditAction.CREATE, type, id, extractPatientReference(resource), success);
         }
     }
 
@@ -78,21 +78,23 @@ public class FhirResourceStore {
             success = true;
             return resource;
         } finally {
-            audit(AuditAction.UPDATE, type, id, success);
+            audit(AuditAction.UPDATE, type, id, extractPatientReference(resource), success);
         }
     }
 
     @Transactional
     public Optional<Resource> read(String resourceType, String resourceId) {
         boolean success = false;
+        String patientReference = null;
         try {
             Optional<Resource> result = repository
                     .findByResourceTypeAndResourceId(resourceType, resourceId)
                     .map(this::parse);
             success = result.isPresent();
+            patientReference = result.map(this::extractPatientReference).orElse(null);
             return result;
         } finally {
-            audit(AuditAction.READ, resourceType, resourceId, success);
+            audit(AuditAction.READ, resourceType, resourceId, patientReference, success);
         }
     }
 
@@ -106,7 +108,7 @@ public class FhirResourceStore {
             success = true;
             return result;
         } finally {
-            audit(AuditAction.SEARCH, resourceType, "*", success);
+            audit(AuditAction.SEARCH, resourceType, "*", null, success);
         }
     }
 
@@ -120,21 +122,23 @@ public class FhirResourceStore {
             success = true;
             return result;
         } finally {
-            audit(AuditAction.SEARCH, resourceType, patientId, success);
+            audit(AuditAction.SEARCH, resourceType, patientId, patientId, success);
         }
     }
 
     @Transactional
     public boolean delete(String resourceType, String resourceId) {
         boolean success = false;
+        String patientReference = null;
         try {
             Optional<StoredResource> existing =
                     repository.findByResourceTypeAndResourceId(resourceType, resourceId);
+            patientReference = existing.map(StoredResource::getPatientId).orElse(null);
             existing.ifPresent(repository::delete);
             success = existing.isPresent();
             return success;
         } finally {
-            audit(AuditAction.DELETE, resourceType, resourceId, success);
+            audit(AuditAction.DELETE, resourceType, resourceId, patientReference, success);
         }
     }
 
@@ -153,13 +157,14 @@ public class FhirResourceStore {
         repository.save(stored);
     }
 
-    private void audit(AuditAction action, String resourceType, String resourceId, boolean success) {
+    private void audit(AuditAction action, String resourceType, String resourceId,
+                       String patientReference, boolean success) {
         // Do not re-audit reads/writes of the audit trail itself.
         if ("AuditEvent".equals(resourceType)) {
             return;
         }
         AuditContext context = AuditContextHolder.get();
-        var event = auditEventFactory.build(context, action, resourceType, resourceId, success);
+        var event = auditEventFactory.build(context, action, resourceType, resourceId, patientReference, success);
         rawSave(event, 1);
     }
 
@@ -177,6 +182,13 @@ public class FhirResourceStore {
         }
         if (resource instanceof Encounter encounter) {
             return refValue(encounter.getSubject());
+        }
+        if (resource instanceof org.hl7.fhir.r4.model.AuditEvent auditEvent) {
+            return auditEvent.getEntity().stream()
+                    .map(e -> e.getWhat().getReference())
+                    .filter(ref -> ref != null && ref.startsWith("Patient/"))
+                    .findFirst()
+                    .orElse(null);
         }
         return null;
     }

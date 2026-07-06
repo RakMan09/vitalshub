@@ -8,8 +8,10 @@ import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Quantity;
 import org.hl7.fhir.r4.model.Reference;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * Builds normalized {@code Observation} resources from source measurements. Ids
@@ -50,7 +52,16 @@ public final class ObservationFactory {
     }
 
     private static String deterministicId(IngestionContext context, String sourceCode, Instant effective) {
-        String raw = context.patientId() + "-" + sourceCode + "-" + effective.toEpochMilli();
-        return raw.replaceAll("[^A-Za-z0-9-]", "-");
+        return stableId(context.patientId(), sourceCode, String.valueOf(effective.toEpochMilli()));
+    }
+
+    /**
+     * Produces a deterministic, FHIR-compliant id (<= 64 chars) from the given
+     * parts. Deterministic so re-ingesting identical data updates rather than
+     * duplicates, and so adapter output is stable for golden-file tests.
+     */
+    public static String stableId(String... parts) {
+        String raw = String.join("|", parts);
+        return UUID.nameUUIDFromBytes(raw.getBytes(StandardCharsets.UTF_8)).toString();
     }
 }

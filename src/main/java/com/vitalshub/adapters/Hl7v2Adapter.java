@@ -97,7 +97,7 @@ public class Hl7v2Adapter implements SourceAdapter {
         }
         // Non-numeric OBX -> keep as a coded observation with a string value.
         org.hl7.fhir.r4.model.Observation obs = new org.hl7.fhir.r4.model.Observation();
-        obs.setId((context.patientId() + "-" + code + "-" + effective.toEpochMilli()).replaceAll("[^A-Za-z0-9-]", "-"));
+        obs.setId(ObservationFactory.stableId(context.patientId(), code, String.valueOf(effective.toEpochMilli())));
         obs.setStatus(org.hl7.fhir.r4.model.Observation.ObservationStatus.FINAL);
         obs.setCode(new CodeableConcept().addCoding(new Coding(system, code, display)).setText(display));
         obs.setSubject(new Reference(context.patientReference()));
@@ -112,7 +112,7 @@ public class Hl7v2Adapter implements SourceAdapter {
             return null;
         }
         Encounter encounter = new Encounter();
-        encounter.setId((context.patientId() + "-encounter-" + patientClass).replaceAll("[^A-Za-z0-9-]", "-"));
+        encounter.setId(ObservationFactory.stableId(context.patientId(), "encounter", patientClass));
         encounter.setStatus(Encounter.EncounterStatus.FINISHED);
         encounter.setClass_(mapEncounterClass(patientClass));
         encounter.setSubject(new Reference(context.patientReference()));

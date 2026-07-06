@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VitalsHub — personal health-data passport</title>
+  <meta name="description" content="An interoperability + privacy engine that unifies messy health data into FHIR, de-identifies it for sharing, and audits every access." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <div class="brand">
+        <span class="logo">◈</span>
+        <span>VitalsHub</span>
+      </div>
+      <nav>
+        <a href="#demo">Live demo</a>
+        <a href="#how">How it works</a>
+        <a href="https://github.com/rakman09/vitalshub" target="_blank" rel="noopener">Source</a>
+      </nav>
+    </div>
+    <div class="wrap hero-copy">
+      <h1>Your health data, unified &amp; owned.</h1>
+      <p class="lead">
+        VitalsHub pulls your data out of mismatched sources — a smartwatch export, a smart-scale CSV,
+        an Apple Health dump, and a clinic's HL7 v2 message — and unifies them into one clean,
+        validated <strong>FHIR</strong> timeline. Then it lets you share a <strong>de-identified</strong>
+        snapshot under consent and logs <strong>exactly who saw what</strong>.
+      </p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#demo">Try the interactive demo ↓</a>
+        <a class="btn ghost" href="https://github.com/rakman09/vitalshub" target="_blank" rel="noopener">View on GitHub</a>
+      </div>
+      <p class="banner">
+        This page runs the <em>same pipeline logic</em> as the backend, live in your browser — no server needed.
+        The production engine is <strong>Java 21 · Spring Boot · HAPI FHIR</strong>, verified by an automated test suite.
+      </p>
+    </div>
+  </header>
+
+  <main>
+    <!-- ================= DEMO ================= -->
+    <section id="demo" class="section">
+      <div class="wrap">
+        <h2>Interactive demo</h2>
+        <p class="section-sub">Ingest the messy sources, watch them unify, share safely, and inspect the audit trail — all live.</p>
+
+        <!-- Step 1: ingest -->
+        <div class="step">
+          <h3><span class="num">1</span> Ingest heterogeneous sources</h3>
+          <div class="cards" id="sourceCards"></div>
+          <div class="row-actions">
+            <button class="btn primary" id="ingestAll">Ingest all sources</button>
+            <button class="btn ghost" id="resetBtn">Reset</button>
+          </div>
+        </div>
+
+        <!-- Step 2: unified timeline -->
+        <div class="step">
+          <h3><span class="num">2</span> One unified, validated timeline</h3>
+          <div class="charts">
+            <div class="chart-card"><h4>Body weight (kg)</h4><canvas id="weightChart"></canvas></div>
+            <div class="chart-card"><h4>Heart rate (bpm)</h4><canvas id="hrChart"></canvas></div>
+            <div class="chart-card"><h4>Steps</h4><canvas id="stepsChart"></canvas></div>
+          </div>
+          <details class="table-wrap">
+            <summary>Show normalized FHIR observations (with terminology mapping)</summary>
+            <div id="obsTable"></div>
+          </details>
+        </div>
+
+        <!-- Step 3: share -->
+        <div class="step">
+          <h3><span class="num">3</span> Share safely (consent + de-identification)</h3>
+          <div class="share-grid">
+            <form id="consentForm" class="consent">
+              <label>Recipient
+                <input type="text" id="recipient" value="dr-smith" />
+              </label>
+              <fieldset>
+                <legend>Allowed categories</legend>
+                <label><input type="checkbox" value="body-composition" checked /> Body composition</label>
+                <label><input type="checkbox" value="vitals" /> Vitals</label>
+                <label><input type="checkbox" value="activity" /> Activity</label>
+                <label><input type="checkbox" value="labs" /> Labs</label>
+              </fieldset>
+              <label class="switch">
+                <input type="checkbox" id="deidToggle" checked /> Require de-identification (Safe Harbor)
+              </label>
+              <button class="btn primary" id="shareBtn" type="submit">Grant consent &amp; share</button>
+              <button class="btn ghost" id="noConsentBtn" type="button">Try sharing without consent</button>
+            </form>
+            <div class="share-out">
+              <div class="compare">
+                <div>
+                  <h4>Original patient (private)</h4>
+                  <pre id="originalPatient" class="json">—</pre>
+                </div>
+                <div>
+                  <h4>Shared snapshot</h4>
+                  <pre id="sharedPatient" class="json">—</pre>
+                </div>
+              </div>
+              <p id="shareMsg" class="share-msg"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: audit + metrics -->
+        <div class="step">
+          <h3><span class="num">4</span> Every access is logged &amp; data quality is measured</h3>
+          <div class="tiles" id="metricTiles"></div>
+          <h4 class="mt">Audit trail — "who accessed my data?"</h4>
+          <div id="auditTable" class="table-wrap"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= HOW IT WORKS ================= -->
+    <section id="how" class="section alt">
+      <div class="wrap">
+        <h2>How it works</h2>
+        <pre class="mermaid">
+flowchart LR
+  W["Wearable JSON"] --> Ing
+  S["Smart-scale CSV"] --> Ing
+  H["Clinic HL7 v2"] --> Ing
+  A["Apple-Health XML"] --> Ing
+  Ing["Adapters"] --> Norm["Normalize to FHIR"]
+  Norm --> Term["Terminology map (LOINC/SNOMED)"]
+  Term --> Valid["Validate"]
+  Valid -->|valid| Store[("Resource store")]
+  Valid -->|invalid| Quar[("Quarantine + reason")]
+  Store --> Deid["De-identify + consent"]
+  Deid --> Doc["Doctor / coach"]
+  Store -.every read/write.-> Audit[("Audit log")]
+        </pre>
+
+        <div class="feature-grid">
+          <div class="feature"><h4>Standards-based</h4><p>Parses HL7 v2, produces FHIR R4 resources — the formats healthcare actually runs on.</p></div>
+          <div class="feature"><h4>Terminology mapping</h4><p>Local codes → LOINC/SNOMED. Unmapped codes are flagged, never silently dropped.</p></div>
+          <div class="feature"><h4>PHI de-identification</h4><p>Safe-Harbor redaction: names, contacts, addresses, IDs removed; dates → year; ages 90+ aggregated.</p></div>
+          <div class="feature"><h4>Un-bypassable audit</h4><p>One door to the database, and it always writes a FHIR AuditEvent. Proven at 100% coverage by tests.</p></div>
+        </div>
+
+        <div class="verify">
+          <h3>How do you know it really works?</h3>
+          <ul>
+            <li><strong>Automated tests</strong> — the backend ships 17 passing tests (adapters, unification, quarantine, de-id, consent, audit coverage). See the CI badge on the repo.</li>
+            <li><strong>This demo</strong> — the exact same pipeline logic runs here in your browser; its outputs are checked by a Node self-test in CI.</li>
+            <li><strong>Run it yourself</strong> — <code>./gradlew bootRun</code> then <code>python data/synthea_load.py</code> reproduces the whole flow against the real API.</li>
+            <li><strong>API explorer</strong> — the running app serves interactive Swagger UI at <code>/swagger-ui.html</code> and a FHIR CapabilityStatement at <code>/fhir/metadata</code>.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <p>VitalsHub — an interoperability + privacy engine. Synthetic data only; no real PHI.</p>
+      <p><a href="https://github.com/rakman09/vitalshub" target="_blank" rel="noopener">github.com/rakman09/vitalshub</a></p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="pipeline.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

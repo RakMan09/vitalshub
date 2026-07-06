@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: vitalshub-postgres
+    environment:
+      POSTGRES_DB: vitalshub
+      POSTGRES_USER: vitalshub
+      POSTGRES_PASSWORD: vitalshub
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vitalshub"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: vitalshub-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://postgres:5432/vitalshub
+      DB_USER: vitalshub
+      DB_PASSWORD: vitalshub
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:

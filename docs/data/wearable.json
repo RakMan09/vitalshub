@@ -1,0 +1,13 @@
+{
+  "user": { "id": "fitbit-987" },
+  "activities-heart": [
+    { "dateTime": "2024-05-01", "value": { "restingHeartRate": 62 } }
+  ],
+  "activities-steps": [
+    { "dateTime": "2024-05-01", "value": "8432" }
+  ],
+  "heartRateSamples": [
+    { "time": "2024-05-01T08:00:00Z", "bpm": 72 },
+    { "time": "2024-05-01T08:05:00Z", "bpm": 78 }
+  ]
+}

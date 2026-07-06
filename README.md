@@ -1,5 +1,13 @@
 # VitalsHub — a personal health-data passport
 
+[![CI](https://github.com/rakman09/vitalshub/actions/workflows/ci.yml/badge.svg)](https://github.com/rakman09/vitalshub/actions/workflows/ci.yml)
+[![Live demo](https://img.shields.io/badge/demo-GitHub%20Pages-0ea5a5)](https://rakman09.github.io/vitalshub/)
+
+**▶ Live interactive demo: https://rakman09.github.io/vitalshub/** — ingest the messy
+sources, watch them unify into a FHIR timeline, share a de-identified snapshot under
+consent, and inspect the audit trail. It runs the *same pipeline logic* as the backend,
+live in your browser.
+
 VitalsHub is an **interoperability + privacy engine** for personal health data. It
 pulls your data out of many mismatched sources — a Fitbit-style wearable JSON
 export, an Apple-Health-style dump, a smart-scale CSV, and a clinic's HL7 v2
@@ -105,6 +113,33 @@ curl "localhost:8080/api/patients/<id>/access-log"
 # Data-quality metrics
 curl "localhost:8080/api/metrics/data-quality"
 ```
+
+### Interactive API explorer (Swagger UI)
+
+With the app running, browse the `/api` endpoints interactively at
+**http://localhost:8080/swagger-ui.html** (OpenAPI spec at `/v3/api-docs`). The FHIR
+endpoints under `/fhir` expose a FHIR CapabilityStatement at `/fhir/metadata`.
+
+## Live demo (GitHub Pages)
+
+The [`docs/`](docs/) folder is a self-contained, static, interactive demo of the
+whole pipeline — no server or database required. It runs a faithful browser port of
+the backend logic (adapters → normalize → terminology map → validate → store, plus
+de-identification, consent, and audit) against the same sample data and terminology
+map. That port is verified in CI by a Node self-test ([`tools/pages-selftest.cjs`](tools/pages-selftest.cjs))
+that asserts it reproduces the backend's behaviour.
+
+To publish it (one-time): **Settings → Pages → Build and deployment → Source:
+GitHub Actions**. The [`pages.yml`](.github/workflows/pages.yml) workflow then deploys
+`docs/` on every push to `main` (or via *Run workflow*). The site appears at
+`https://<owner>.github.io/vitalshub/`.
+
+## Verifying it works (for reviewers)
+
+- **CI badge** — `./gradlew test` runs on every push (17 tests) plus the demo self-test; a green badge is objective proof it builds and passes.
+- **Live demo** — click the Pages link above and drive the whole flow in the browser.
+- **Run locally** — `./gradlew bootRun` then `python data/synthea_load.py` reproduces the end-to-end flow against the real API.
+- **Swagger UI** — click through the real endpoints at `/swagger-ui.html`.
 
 ## API reference
 
